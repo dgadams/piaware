@@ -38,4 +38,7 @@ services:
 - nginx is expecting two certificate files
     - acme.key
     - acme.fullchain
-
+## Acknowledgements
+- Thanks to Flightaware for providing the original files
+- And thank you to wherever I got the piaware .deb file for AMD64
+    - I'm considering building piaware from scratch for the next commit.
