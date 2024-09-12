@@ -1,4 +1,4 @@
-### Piaware Docker image
+# Piaware Docker image
 
 ## Built for AMD64 (not raspberry pi)
 
@@ -8,7 +8,7 @@
                        exposes ports 8080 http, and 8443 https
 - piaware 9.0.1
 
-# Usually run using docker compose yml file:
+### Usually run using docker compose yml file:
 ```
 name: piaware
 services:
@@ -33,6 +33,6 @@ services:
 ```
 ## Notes
 - nginx is expecting two certificate files
--- acme.key
--- acme.fullchain
+    - acme.key
+    - acme.fullchain
 
