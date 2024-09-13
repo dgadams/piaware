@@ -35,10 +35,9 @@ services:
       JSON_LOCATION_ACCURACY: 2 
 ```
 ## Notes
-- nginx is expecting two certificate files
-    - acme.key
-    - acme.fullchain
+- full build of piaware with dump1090 and nginx.
+    - 186 MB 
 ## Acknowledgements
 - Thanks to Flightaware for providing the original files
 - And thank you to wherever I got the piaware .deb file for AMD64
-    - I'm considering building piaware from scratch for the next commit.
+    - I think abcd567a.
