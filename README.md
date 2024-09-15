@@ -33,5 +33,12 @@ services:
 ## Notes
 - full build of piaware with dump1090 and nginx.
     - 181 MB 
+- Problems
+    In some ways this is a terrible build.
+    dump1090 is generally ok, but piaware is unacceptable.
+    I build piaware just to get the .deb file for the next stage.
+    Then install using the .deb file.  It should be possilbe to
+    move files from the piaware build directly into the install.
+    The piaware files are rather complicated and tough to figure out.
 ## Acknowledgements
 - Thanks to Flightaware for providing the original files
