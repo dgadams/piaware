@@ -34,7 +34,7 @@ services:
 - full build of piaware with dump1090 and nginx.
     - 181 MB 
 - Problems
-    In some ways this is a terrible build.
+    - In some ways this is a terrible build.
     dump1090 is generally ok, but piaware is unacceptable.
     I build piaware just to get the .deb file for the next stage.
     Then install using the .deb file.  It should be possilbe to
