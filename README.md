@@ -4,12 +4,12 @@
 
 ## This image includes:
 - dump1090-fa 
-    - built as dump1090 
-    - only built with rtlsdr libraries 
+    - built as dump1090 from flightware sources.
+    - only built with rtlsdr libraries. 
 - nginx web server 
-    -  exposes ports 8080 http
+    -  exposes ports 8080 http.
 - piaware 9.0.1
-
+    - built from flightware source.
 ### Usually run using docker compose yml file:
 ```
 name: piaware
@@ -32,8 +32,6 @@ services:
 ```
 ## Notes
 - full build of piaware with dump1090 and nginx.
-    - 186 MB 
+    - 181 MB 
 ## Acknowledgements
 - Thanks to Flightaware for providing the original files
-- And thank you to wherever I got the piaware .deb file for AMD64
-    - I think abcd567a.
