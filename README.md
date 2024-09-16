@@ -25,7 +25,7 @@ services:
       - /dev/bus/usb
     environment:
       FEEDER_ID: "your feeder id here"
-      RECEIVER_LON: "your longitute"
+      RECEIVER_LON: "your longitude"
       RECEIVER_LAT: "your latitude"
       RECEIVER: "rtlsdr"
       JSON_LOCATION_ACCURACY: 2 
