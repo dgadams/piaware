@@ -64,36 +64,3 @@ RUN <<EOR
 EOR
 #####################################################################
 
-FROM bellsoft/alpaquita-linux-base:stream-glibc AS install
-
-WORKDIR /dump1090
-COPY --from=build /dump1090/public_html/ /dump1090/public_html/
-COPY --from=build /libs /lib
-COPY --from=build /pibin /usr/bin/
-
-RUN <<ENDRUN
-    apk --no-cache add nginx tcl tk libusb bash ca-certificates openssl
-    adduser -D piaware
-    adduser piaware piaware
-
-#   setup and change ownership of directories
-    mkdir /run/dump1090
-    mkdir /run/piaware
-    mkdir /var/cache/piaware
-    touch /etc/piaware.conf
-    touch /run/piaware/status.json
-    touch /dump1090/public_html/upintheair.json
-    chown -R piaware /run/dump1090
-    chown -R piaware /run/piaware
-    chown -R piaware /var/log/nginx
-    chown -R piaware /var/lib/nginx
-    chown -R piaware /var/cache/piaware
-    chmod -R 755 /run/dump1090
-    chown piaware /etc/piaware.conf
-    rm -rf /etc/nginx
-ENDRUN
-
-COPY files/* /dump1090/
-EXPOSE 8080
-USER piaware
-CMD ["/dump1090/piaware.sh"]
