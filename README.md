@@ -10,6 +10,14 @@
     -  exposes ports 8080 http.
 - piaware 9.0.1
     - built from flightware source.
+## Tags
+- ***Latest*** - latest stable build
+- ***Experimental*** - Experimental build with Dockerfile.experimental.
+Shrinks the size of the image down to 88.5 MB from 181 MB but still testing. 
+
+## Notes
+- Problem - Not sure experimental version is communicating fully with FlightAware.  
+Green icons do not appear on status page.
 ### Usually run using docker compose yml file:
 ```
 name: piaware
@@ -30,15 +38,5 @@ services:
       RECEIVER: "rtlsdr"
       JSON_LOCATION_ACCURACY: 2 
 ```
-## Notes
-- full build of piaware with dump1090 and nginx.
-    - 181 MB 
-- Problems
-    - In some ways this is a terrible build.
-    dump1090 is generally ok, but piaware is unacceptable.
-    I build piaware just to get the .deb file for the next stage.
-    Then install using the .deb file.  It should be possilbe to
-    move files from the piaware build directly into the install.
-    The piaware files are rather complicated and tough to figure out.
 ## Acknowledgements
 - Thanks to Flightaware for providing the original files
