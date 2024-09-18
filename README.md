@@ -12,12 +12,19 @@
     - built from flightware source.
 ## Tags
 - ***Latest*** - latest stable build
-- ***Experimental*** - Experimental build with Dockerfile.experimental.
-Shrinks the size of the image down to 88.5 MB from 181 MB but still testing. 
 
 ## Notes
-- Problem - Not sure experimental version is communicating fully with FlightAware.  
-Green icons do not appear on status page.
+- This version is now running in alpaquita. A multi-stage build is implemented. 
+The following stages are done in the Dockerfile (build, install):
+    - build: dump1090 is built
+    - build: piaware is built
+    - build: piaware is installed
+    - build: libraries needed for piaware are saved
+    - build: Binaries needed are saved
+    - install: The image is base is Alpaquita
+    - install: Libraries and Binaries are copied from build.
+    - install: Everything is configured 
+
 ### Usually run using docker compose yml file:
 ```
 name: piaware

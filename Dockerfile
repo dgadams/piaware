@@ -1,15 +1,11 @@
 # Author:   D. G. Adams
 #
-# Date:     2024-Aug-21
+# Date:     2024-Sep-18
 #
-# Builds as follows:
-#   1. dump1090 with nginx support
-#   2. piaware to get piaware.deb
-#   3. installs 1) and 2) together
-#
-FROM debian:bookworm-slim  AS  dump1090-build
+FROM debian:bookworm-slim  AS  build
 
-RUN <<EOF 
+# Build Dump1090
+RUN <<EOF
     apt-get update
     apt-get -yq install \
       build-essential \
@@ -21,19 +17,15 @@ RUN <<EOF
       pkg-config
     git clone https://github.com/flightaware/dump1090.git /dump1090
     cd /dump1090
-    dpkg-buildpackage -b --no-sign --build-profiles=custom,rtlsdr 
+    dpkg-buildpackage -b --no-sign --build-profiles=custom,rtlsdr
 EOF
 
-#####################################################################
-
-FROM debian:bookworm-slim AS piaware-build
-
+# Build Piaware
 RUN <<EOF
-    apt-get -yq update
-    apt-get -yq install build-essential git devscripts debhelper tcl8.6-dev autoconf \
+    apt-get -yq install devscripts tcl8.6-dev autoconf \
         python3-dev python3-venv python3-setuptools libz-dev openssl \
         libboost-system-dev libboost-program-options-dev libboost-regex-dev \
-        libboost-filesystem-dev patchelf \
+        libboost-filesystem-dev patchelf libncurses6 librtlsdr0 net-tools \
         wget python3-pip python3-build python3-wheel
     git clone "https://github.com/flightaware/piaware_builder.git"
     cd /piaware_builder
@@ -41,45 +33,66 @@ RUN <<EOF
     cd ./package-bookworm
     dpkg-buildpackage -b --no-sign
 EOF
-#   should be done and piaware_9.0.1_amd64.deb is in /piaware_builder
+
+RUN  apt-get -yq install /piaware_builder/piaware_9.0.1_amd64.deb
+
+WORKDIR /libs
+RUN <<EOR
+    mv /lib/piaware .
+    mv /lib/piaware_packages .
+    mv /lib/pirehose .
+    mv /lib/Tcllauncher1.10 .
+    mv /lib/tclx8.4 .
+    mv /lib/fa_adept_codec .
+    mv /lib/tcltk/x86_64-linux-gnu/tcltls1.7.22 .
+    mv /usr/share/tcltk/tcllib1.21 .
+    cp /lib/libtclx8.4.so.0 .
+    cp /lib/x86_64-linux-gnu/libncurses* .
+    cp /lib/x86_64-linux-gnu/librtlsdr* .
+    cp /lib/x86_64-linux-gnu/libtinfo.so.6 .
+    cp /lib/x86_64-linux-gnu/libselinux.so.1 .
+    cp /lib/x86_64-linux-gnu/libpcre2-8.so.0 .
+EOR
+
+WORKDIR /pibin
+RUN <<EOR
+    cp /dump1090/dump1090 .
+    cp /usr/bin/netstat .
+    cp /usr/bin/piaware .
+    cp /usr/bin/pirehose .
+    cp /usr/bin/tcllauncher .
+EOR
 #####################################################################
 
-FROM debian:bookworm-slim AS installer
+FROM bellsoft/alpaquita-linux-base:stream-glibc AS install
 
-COPY --from=dump1090-build /dump1090/dump1090 /usr/bin/dump1090
-COPY --from=dump1090-build /dump1090/public_html/ /dump1090/public_html/
-COPY --from=piaware-build  /piaware_builder/piaware_9.0.1_amd64.deb ./piaware.deb
+WORKDIR /dump1090
+COPY --from=build /dump1090/public_html/ /dump1090/public_html/
+COPY --from=build /libs /lib
+COPY --from=build /pibin /usr/bin/
 
-RUN <<EOF
-#   Load dependencies and piaware
-
-    apt-get update 
-    apt-get -yq install \
-        nginx \
-        libncurses6 \
-        librtlsdr0 \
-        ./piaware.deb 
-    apt-get clean 
-    rm -rf /var/lib/apt/lists/* 
-    rm ./piaware.deb 
+RUN <<ENDRUN
+    apk --no-cache add nginx tcl tk libusb bash ca-certificates openssl
+    adduser -D piaware
+    adduser piaware piaware
 
 #   setup and change ownership of directories
     mkdir /run/dump1090
     mkdir /run/piaware
+    mkdir /var/cache/piaware
+    touch /etc/piaware.conf
     touch /run/piaware/status.json
     touch /dump1090/public_html/upintheair.json
     chown -R piaware /run/dump1090
     chown -R piaware /run/piaware
     chown -R piaware /var/log/nginx
     chown -R piaware /var/lib/nginx
+    chown -R piaware /var/cache/piaware
     chmod -R 755 /run/dump1090
+    chmod 766 /run/piaware/status.json
     chown piaware /etc/piaware.conf
     rm -rf /etc/nginx
-#
-#   Remove some debian files not needed
-    rm -rf /usr/share/doc
-    rm -rf /usr/share/zoneinfo
-EOF
+ENDRUN
 
 COPY files/* /dump1090/
 EXPOSE 8080
