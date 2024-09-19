@@ -89,7 +89,7 @@ RUN <<ENDRUN
     chown -R piaware /var/lib/nginx
     chown -R piaware /var/cache/piaware
     chmod -R 755 /run/dump1090
-    chmod 766 /run/piaware/status.json
+    chmod 666 /run/piaware/status.json
     chown piaware /etc/piaware.conf
     rm -rf /etc/nginx
 ENDRUN
