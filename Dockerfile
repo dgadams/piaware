@@ -47,8 +47,8 @@ RUN <<EOR
     mv /lib/tcltk/x86_64-linux-gnu/tcltls1.7.22 .
     mv /usr/share/tcltk/tcllib1.21 .
     cp /lib/libtclx8.4.so.0 .
-    cp /lib/x86_64-linux-gnu/libncurses* .
-    cp /lib/x86_64-linux-gnu/librtlsdr* .
+    cp /lib/x86_64-linux-gnu/libncurses.so.6 .
+    cp /lib/x86_64-linux-gnu/librtlsdr.so.0 .
     cp /lib/x86_64-linux-gnu/libtinfo.so.6 .
     cp /lib/x86_64-linux-gnu/libselinux.so.1 .
     cp /lib/x86_64-linux-gnu/libpcre2-8.so.0 .
@@ -72,16 +72,14 @@ COPY --from=build /libs /lib
 COPY --from=build /pibin /usr/bin/
 
 RUN <<ENDRUN
-    apk --no-cache add nginx tcl tk libusb bash ca-certificates openssl
+    apk --no-cache add nginx tcl tk libusb bash 
     adduser -DH piaware
-    adduser piaware piaware
 
 #   setup and change ownership of directories
     mkdir /run/dump1090
     mkdir /run/piaware
     mkdir /var/cache/piaware
     touch /etc/piaware.conf
-    touch /run/piaware/status.json
     touch /dump1090/public_html/upintheair.json
     chown -R piaware /run/dump1090
     chown -R piaware /run/piaware
