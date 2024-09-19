@@ -61,21 +61,27 @@ RUN <<EOR
     cp /usr/bin/piaware .
     cp /usr/bin/pirehose .
     cp /usr/bin/tcllauncher .
-    cp /etc/sudoers.d/piaware ./piaware.sudo
 EOR
 #####################################################################
 
-FROM bellsoft/alpaquita-linux-base:stream-glibc AS install
+FROM debian:bookworm-slim AS install
+#FROM bellsoft/alpaquita-linux-base:stream-glibc AS install
 
 WORKDIR /dump1090
 COPY --from=build /dump1090/public_html/ /dump1090/public_html/
 COPY --from=build /libs /lib
 COPY --from=build /pibin /usr/bin/
+COPY files/* /dump1090/
 
 RUN <<ENDRUN
-    apk --no-cache add nginx tcl tk libusb bash sudo 
-    adduser -DH piaware
-    mv /usr/bin/piaware.sudo /etc/sudoers.d
+    apt-get -y update
+    apt-get -y install nginx tcl tk itcl3 libusb-1.0-0
+    apt-get autoclean
+    rm -rf /var/lib/apt/lists/*
+
+#    apk --no-cache add nginx tcl tk libusb bash 
+#    adduser -DH piaware
+    adduser piaware
 
 #   setup and change ownership of directories
     mkdir /run/dump1090
@@ -93,7 +99,6 @@ RUN <<ENDRUN
     rm -rf /etc/nginx
 ENDRUN
 
-COPY files/* /dump1090/
 EXPOSE 8080
 USER piaware
 CMD ["/dump1090/piaware.sh"]
