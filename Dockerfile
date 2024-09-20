@@ -1,4 +1,3 @@
-
 # Author:   D. G. Adams
 #
 # Date:     2024-Sep-18
@@ -37,6 +36,9 @@ EOF
 
 RUN  apt-get -yq install /piaware_builder/piaware_9.0.1_amd64.deb
 
+# Here we do some reverse Muntzing (Lookup Earl "Madman" Muntz). 
+# Just grabbing the minimum set of libraries needed to function
+
 WORKDIR /libs
 RUN <<EOR
     mv /lib/piaware .
@@ -73,21 +75,23 @@ COPY --from=build /libs /lib
 COPY --from=build /pibin /usr/bin/
 
 RUN <<ENDRUN
-    apk --no-cache add nginx libusb tcl tk bash 
+    apk --no-cache add nginx libusb tcl tk bash
 #    apk --no-cache libgcc libstdc++ libssl3 iproute2 libexpat libffi
     adduser -DH piaware
 
 #   setup and change ownership of directories
     mkdir /run/dump1090
+    mkdir /var/run/piaware
     mkdir /var/cache/piaware
     touch /etc/piaware.conf
     touch /dump1090/public_html/upintheair.json
     chown -R piaware /run/dump1090
+    chown -R piaware /run/piaware
     chown -R piaware /var/cache/piaware
     chown -R piaware /var/log/nginx
     chown -R piaware /var/lib/nginx
     chown piaware /etc/piaware.conf
-    chown piaware /dump1090/public_html 
+    chown piaware /dump1090/public_html
     rm -rf /etc/nginx
 ENDRUN
 
