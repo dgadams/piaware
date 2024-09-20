@@ -3,7 +3,7 @@ set -e
 
 # paste environment into piaware.conf
 echo "feeder-id ${FEEDER_ID-}"      >> /etc/piaware.conf
-echo "allow-auto-updates no"        >> /etc/piaware.conf
+echo "allow-auto-updates yes"        >> /etc/piaware.conf
 echo "allow-mlat yes"               >> /etc/piaware.conf
 echo "mlat-results yes"             >> /etc/piaware.conf
 
@@ -40,6 +40,6 @@ if [ -n "$RECEIVER_LAT" -a -n "$RECEIVER_LON" ]; then
 fi
 
 # start everything up
-/usr/bin/dump1090 $OPTS &
+/usr/bin/dump1090-fa $OPTS &
 nginx -g 'pid /run/dump1090/nginx.pid;' -c '/dump1090/nginx.conf'
-exec /usr/bin/piaware -plainlog -statusfile /run/piaware/status.json
+exec /usr/bin/piaware -plainlog -statusfile /dump1090/public_html/status.json

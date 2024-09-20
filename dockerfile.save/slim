@@ -86,6 +86,7 @@ RUN <<ENDRUN
     chown -R piaware /var/cache/piaware
     chown -R piaware /var/log/nginx
     chown -R piaware /var/lib/nginx
+#    chmod -R 755 /run/dump1090
     chown piaware /etc/piaware.conf
     chown piaware /dump1090/public_html 
     rm -rf /etc/nginx
