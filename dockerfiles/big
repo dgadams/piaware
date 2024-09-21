@@ -46,7 +46,7 @@ EOF
 
 FROM debian:bookworm-slim AS installer
 
-COPY --from=dump1090-build /dump1090/dump1090 /usr/bin/dump1090
+COPY --from=dump1090-build /dump1090/dump1090 /usr/bin/dump1090-fa
 COPY --from=dump1090-build /dump1090/public_html/ /dump1090/public_html/
 COPY --from=piaware-build  /piaware_builder/piaware_9.0.1_amd64.deb ./piaware.deb
 
