@@ -40,6 +40,7 @@ EOF
 
 # Set up files
 WORKDIR /bld-files
+COPY files/* .
 RUN <<EOF
     mv /piaware_builder/piaware_9.0.1_amd64.deb ./piaware.deb
     mv /dump1090/debian/dump1090-fa/usr/bin/dump1090-fa ./dump1090-fa
@@ -65,6 +66,7 @@ RUN <<ENDRUN
     rm -rf piaware.deb
 
 #   remove unneeded files - do a little muntzing.
+#   This is deceptive. Only files added in this RUN get removed from the image.
     rm -rf /lib/x86_64-linux-gnu/libsystemd*
     rm -rf /lib/x86_64-linux-gnu/libsmartcols*
     rm -rf /lib/x86_64-linux-gnu/libreadline*
@@ -86,6 +88,9 @@ RUN <<ENDRUN
     rm -rf /lib/x86_64-linux-gnu/libnsl*
     rm -rf /lib/x86_64-linux-gnu/libhogweed*
     rm -rf /lib/x86_64-linux-gnu/libgssapi*
+    rm -rf /lib/x86_64-linux-gnu/liblzma5*
+#    rm -rf /lib/x86_64-linux-gnu/kkk
+
     rm -rf /usr/share/doc
     rm -rf /usr/share/zoneinfo
 
@@ -105,7 +110,6 @@ RUN <<ENDRUN
     rm -rf /etc/nginx
 ENDRUN
 
-COPY files/* /dump1090/
 EXPOSE 8080
 USER piaware
 CMD ["/dump1090/piaware.sh"]

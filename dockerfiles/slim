@@ -36,11 +36,17 @@ EOF
 
 RUN  apt-get -yq install /piaware_builder/piaware_9.0.1_amd64.deb
 
-# Here we do some reverse Muntzing (Lookup Earl "Madman" Muntz). 
-# Just grabbing the minimum set of libraries needed to function
+# store everything in /files starting with files/* from build directory
+WORKDIR /files/dump1090
+COPY files/* .
 
-WORKDIR /libs
 RUN <<EOR
+#   copy web stuff
+    mv /dump1090/public_html .
+
+#   copy libraries
+    mkdir /files/lib
+    cd /files/lib
     mv /lib/piaware .
     mv /lib/piaware_packages .
     mv /lib/pirehose .
@@ -55,29 +61,28 @@ RUN <<EOR
     cp /lib/x86_64-linux-gnu/libtinfo.so.6 .
     cp /lib/x86_64-linux-gnu/libselinux.so.1 .
     cp /lib/x86_64-linux-gnu/libpcre2-8.so.0 .
-#    cp /lib/x86_64-linux-gnu/libitcl3.4.so.1 .
-EOR
 
-WORKDIR /pibin
-RUN <<EOR
+#   get binaries
+    mkdir /files/bin
+    cd /files/bin
     cp /dump1090/debian/dump1090-fa/usr/bin/dump1090-fa .
     cp /usr/bin/netstat .
     cp /usr/bin/piaware .
     cp /usr/bin/pirehose .
     cp /usr/bin/tcllauncher .
 EOR
+
 #####################################################################
 
 FROM bellsoft/alpaquita-linux-base:stream-glibc AS install
 
 WORKDIR /dump1090
-COPY --from=build /dump1090/public_html/ /dump1090/public_html/
-COPY --from=build /libs /lib
-COPY --from=build /pibin /usr/bin/
+COPY --from=build /files/dump1090 .
+COPY --from=build /files/bin/* /usr/bin
+COPY --from=build /files/lib /lib
 
 RUN <<ENDRUN
     apk --no-cache add nginx libusb tcl tk bash
-#    apk --no-cache libgcc libstdc++ libssl3 iproute2 libexpat libffi
     adduser -DH piaware
 
 #   setup and change ownership of directories
@@ -96,7 +101,6 @@ RUN <<ENDRUN
     rm -rf /etc/nginx
 ENDRUN
 
-COPY files/* /dump1090/
 EXPOSE 8080
 USER piaware
 CMD ["/dump1090/piaware.sh"]
