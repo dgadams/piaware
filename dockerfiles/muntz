@@ -89,7 +89,8 @@ RUN <<ENDRUN
     rm -rf /lib/x86_64-linux-gnu/libhogweed*
     rm -rf /lib/x86_64-linux-gnu/libgssapi*
     rm -rf /lib/x86_64-linux-gnu/liblzma5*
-#    rm -rf /lib/x86_64-linux-gnu/kkk
+    
+    rm -rf /lib/x86_64-linux-gnu/libffi*
 
     rm -rf /usr/share/doc
     rm -rf /usr/share/zoneinfo
