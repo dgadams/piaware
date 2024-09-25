@@ -42,5 +42,5 @@ fi
 # start everything up
 dump1090-fa $OPTS &
 nginx -g 'pid /run/dump1090/nginx.pid;' -c '/dump1090/nginx.conf'
-exec piaware -debug -statusfile /run/piaware/status.json
-#exec piaware -p /run/piaware/piaware.pid -plainlog -statusfile /run/piaware/status.json
+#exec piaware -debug -statusfile /run/piaware/status.json
+exec piaware -p /run/piaware/piaware.pid -plainlog -statusfile /run/piaware/status.json
