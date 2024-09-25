@@ -40,7 +40,7 @@ if [ -n "$RECEIVER_LAT" -a -n "$RECEIVER_LON" ]; then
 fi
 
 # start everything up
-/usr/bin/dump1090-fa $OPTS &
+dump1090-fa $OPTS &
 nginx -g 'pid /run/dump1090/nginx.pid;' -c '/dump1090/nginx.conf'
-#exec /usr/bin/piaware -debug -statusfile /run/piaware/status.json
-exec /usr/bin/piaware -p /run/piaware/piaware.pid -plainlog -statusfile /run/piaware/status.json
+exec piaware -debug -statusfile /run/piaware/status.json
+#exec piaware -p /run/piaware/piaware.pid -plainlog -statusfile /run/piaware/status.json

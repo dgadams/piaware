@@ -12,10 +12,11 @@
     - built from flightware source.
 ## Tags
 - ***latest*** latest stable build
-- ***slim*** - smaller version that works except for status 
-notifications on the adsb my status page on flightware
+- ***slim*** - alpaquita version that works except for status 
+notifications on the adsb my status page on flightware.  
+Likely a problem with busybox commands.
 ## building
-- docker buildx build -t piaware:latest -f dockerfiles/muntz .
+- docker buildx build -t piaware:latest .
 - docker buildx build -t piaware:slim -f dockerfiles/slim .
 
 ### Usually run using docker compose yml file:

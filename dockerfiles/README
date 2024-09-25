@@ -1,6 +1,0 @@
-various dockerfiles 
-
-muntz - primary.    Builds a debian image that fully works
-slim  - secondary.  Builds an alpaquita image that mostly works
-partial - not used. Builds a partial build for debug only
-
