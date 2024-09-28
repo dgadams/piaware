@@ -11,14 +11,14 @@
 - piaware 9.0.1
     - built from flightware source.
 ## Tags
-- ***latest*** latest stable build
-- ***slim*** - alpaquita version that works except for status 
-- ***skinny*** - debian version that loads minimum set of dependencies 
-- ***big*** - debian version that just loads the *.deb file
+- ***latest*** latest stable build - 76 MB
+- ***slim*** - alpaquita version that works except for status - 73 MB
+- ***skinny*** - debian version that loads minimum set of dependencies - 61 MB
+- ***big*** - debian version that just loads the *.deb file - 181 MB
 ## Note  
 All versions appear to work correctly.  But slim and skinny don't show
 the green status boxes on the flightaware my ADS-B status page.  
-Interesting note: green status boxes done show when using safari or firefox.
+Interesting note: all version - green status boxes don't show when using safari or firefox.
 ## building
 - docker buildx build -t piaware:latest .
 - docker buildx build -t piaware:slim -f dockerfiles/slim .
