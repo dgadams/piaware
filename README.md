@@ -13,8 +13,12 @@
 ## Tags
 - ***latest*** latest stable build
 - ***slim*** - alpaquita version that works except for status 
-notifications on the adsb my status page on flightware.  
-Likely a problem with busybox commands.
+- ***skinny*** - debian version that loads minimum set of dependencies 
+- ***big*** - debian version that just loads the *.deb file
+## Note  
+All versions appear to work correctly.  But slim and skinny don't show
+the green status boxes on the flightaware my ADS-B status page.  
+Interesting note: green status boxes done show when using safari or firefox.
 ## building
 - docker buildx build -t piaware:latest .
 - docker buildx build -t piaware:slim -f dockerfiles/slim .
