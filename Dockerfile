@@ -68,7 +68,7 @@ EOR
 COPY files/* /dump1090
 RUN <<EOR
     ./dump1090/muntz.sh
-    rm -f /dump1090/muntz.sh
+    rm -f /dump1090/muntz.sh /dump1090/skinny.sh
 EOR
 ######################################################################
 
