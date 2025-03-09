@@ -7,13 +7,13 @@
 #   This is rather ugly and was created by iteratively removing and testing
 #   until things broke.  Then put it back.  This is called muntzing.
 
-#   remove /usr/sbin with exceptions
+#   remove /usr/sbin except for nginx
     cd /usr/sbin
-    ls | grep -xvE 'adduser|nginx' | xargs rm -f
-
+	ls | grep -xvE 'nginx' | xargs rm -f
+	
 #   remove stuff from /usr/bin.  Have to be careful here.
     cd /usr/bin
-    rm -rf [ apt* arch b2sum base* chage chcon chfn chrt chsh cksum
+	rm -rf [ apt* arch b2sum base* chage chcon chfn chrt chsh cksum
     rm -rf find* gp* grep gzip h* i* lo* lsblk lscpu lsfd lsipc lsirq
     rm -rf lslocks lslogins lsmem lsns mawk mkfifo mknod mount
     rm -rf newgrp nice nl nstat numfmt od partx perl* pr* ptx

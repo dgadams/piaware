@@ -39,7 +39,6 @@ RUN <<EOR
 EOR
 
 # Set up files
-# Note wildcard in mv command to pickup changing file names.  DGA 2025-03-09
 WORKDIR /base/dump1090
 RUN <<EOR
     mv /piaware_builder/piaware_*_amd64.deb ./piaware.deb
