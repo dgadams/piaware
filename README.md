@@ -11,7 +11,7 @@
 - piaware 10.0
     - built from flightware source.
 ## Tags
-- ***latest*** latest stable build - 76 MB
+- ***latest***   Stable build - about 80 Mb
 ## building
 - docker buildx build -t piaware:latest .
 - docker buildx build -t piaware:slim -f dockerfiles/slim .
