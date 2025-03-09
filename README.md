@@ -8,17 +8,10 @@
     - only built with rtlsdr libraries. 
 - nginx web server 
     -  exposes ports 8080 http.
-- piaware 9.0.1
+- piaware 10.0
     - built from flightware source.
 ## Tags
 - ***latest*** latest stable build - 76 MB
-- ***slim*** - alpaquita version that works except for status - 73 MB
-- ***skinny*** - debian version that loads minimum set of dependencies - 61 MB
-- ***big*** - debian version that just loads the *.deb file - 181 MB
-## Note  
-All versions appear to work correctly.  But slim and skinny don't show
-the green status boxes on the flightaware my ADS-B status page.  
-Interesting note: all version - green status boxes don't show when using safari or firefox.
 ## building
 - docker buildx build -t piaware:latest .
 - docker buildx build -t piaware:slim -f dockerfiles/slim .
@@ -43,5 +36,7 @@ services:
       RECEIVER: "rtlsdr"
       JSON_LOCATION_ACCURACY: 2 
 ```
+## How I run piaware
+I run the application as a Docker container.  Computer is a Dell Wyse 3040 thin client with 2G of memory and 8G of emmc disk.  I'm using Alpine Linux as the base OS for size, but Debian works just as well.
 ## Acknowledgements
 - Thanks to Flightaware for providing the original files
