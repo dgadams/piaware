@@ -59,8 +59,7 @@ COPY --from=dga-build /base /
 RUN <<EOR
     apt-get -yq update
     apt-get -yq install /dump1090/piaware.deb
-    apt-get -yq install nginx libusb-1.0-0 librtlsdr0 libncurses6 sudo
-    apt-get -yq install busybox
+    apt-get -yq install nginx libusb-1.0-0 librtlsdr0 libncurses6
     apt-get clean
     rm -rf /var/lib/apt/lists/*
     rm -f /dump1090/piaware.deb

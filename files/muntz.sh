@@ -10,7 +10,7 @@
 #   remove /usr/sbin except for nginx
     cd /usr/sbin
 	ls | grep -xvE 'nginx' | xargs rm -f
-	
+
 #   remove stuff from /usr/bin.  Have to be careful here.
     cd /usr/bin
 	rm -rf [ apt* arch b2sum base* chage chcon chfn chrt chsh cksum
@@ -67,3 +67,5 @@
     rm -rf /usr/share/zoneinfo
     rm -rf /usr/share/perl5
     rm -rf /usr/share/common-licenses
+
+#   Going to stop now.  Could remove more but it's down to 80 Mb.
