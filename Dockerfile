@@ -38,19 +38,19 @@ RUN <<EOR
     dpkg-buildpackage -b --no-sign
 EOR
 
-# Set up files
-# Note wildcard in mv command to pickup changing file names.  DGA 2025-03-09
+# Put needed files into /base so we just get needed files and not build junk.
+# Create directories using WORKDIR.
+# Note wildcard in mv command to pickup piaware changing file name.  DGA 2025-03-09
 WORKDIR /base/dump1090
-RUN <<EOR
-    mv /piaware_builder/piaware_*_amd64.deb ./piaware.deb
+RUN mv /piaware_builder/piaware_*_amd64.deb ./piaware.deb && \
     mv /dump1090/public_html/ .
-EOR
 WORKDIR /base/usr/bin
 RUN mv /dump1090/debian/dump1090-fa/usr/bin/dump1090-fa .
-#####################################################################
 
+#####################################################################
 # This build level creates the file system for the install
-# loading packages and piaware.deb
+# loading packages and piaware.deb.
+# Note that files are loaded from /base so build files go away.
 # Then removing unneeded files using muntz.sh
 
 FROM debian:bookworm-slim AS dga-filesystem
@@ -65,7 +65,7 @@ RUN <<EOR
     rm -f /dump1090/piaware.deb
 EOR
 
-# Set permissions and users and then muntz files
+# Create piaware user and set permissions.
 COPY files/* /dump1090
 RUN <<EOR
 	adduser --no-create-home --disabled-login --disabled-password piaware
@@ -83,11 +83,12 @@ RUN <<EOR
     chown piaware /dump1090/public_html
     rm -rf /etc/nginx
 
+# Finally muntz the files.
     ./dump1090/muntz.sh
     rm -f /dump1090/muntz.sh
 EOR
 ######################################################################
-
+# Final installation build level to clean up the image.
 FROM scratch AS dga-install
 COPY --from=dga-filesystem / /
 EXPOSE 8080
