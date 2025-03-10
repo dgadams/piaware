@@ -38,8 +38,8 @@ RUN <<EOR
     dpkg-buildpackage -b --no-sign
 EOR
 
-# Put needed files into /base so we just get needed files and not build junk.
-# Create directories using WORKDIR.
+# the only files we need from the build are the piaware deb and
+# dump1090-fa files and the html directory.  Use WORKDIR to created needed directories.
 # Note wildcard in mv command to pickup piaware changing file name.  DGA 2025-03-09
 WORKDIR /base/dump1090
 RUN mv /piaware_builder/piaware_*_amd64.deb ./piaware.deb && \

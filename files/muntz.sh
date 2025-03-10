@@ -20,9 +20,8 @@
     rm -rf rdma re* sc* se* sha* shred shuf sleep sort split ss stat stdbuf
     rm -rf stty sync ta* test tic tsort ucl* umount unshare up* vdir
     rm -rf w* x* y* z* piaware-config piaware-status
-#   enough now getting into the 20K and less stuff.
 
-#   Now we tackle libraries
+ #   Now we tackle libraries
     rm -rf /usr/lib/apt
     rm -rf /usr/lib/systemd
     rm -rf /usr/lib/piaware-config
