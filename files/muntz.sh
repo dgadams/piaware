@@ -13,7 +13,7 @@
 
 #   remove stuff from /usr/bin.  Have to be careful here.
     cd /usr/bin
-	rm -rf [ apt* arch b2sum base* chage chcon chfn chrt chsh cksum
+	rm -rf apt* arch b2sum base* chage chcon chfn chrt chsh cksum
     rm -rf find* gp* grep gzip h* i* lo* lsblk lscpu lsfd lsipc lsirq
     rm -rf lslocks lslogins lsmem lsns mawk mkfifo mknod mount
     rm -rf newgrp nice nl nstat numfmt od partx perl* pr* ptx
@@ -67,4 +67,5 @@
     rm -rf /usr/share/perl5
     rm -rf /usr/share/common-licenses
 
-#   Going to stop now.  Could remove more but it's down to 80 Mb.
+#   Going to stop now.  Removing more files causes the stats page
+#   to not display green boxes

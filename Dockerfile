@@ -3,7 +3,7 @@
 # Date:     2024-Sep-18
 #
 # This is the smallest piaware image I can get. Done by muntzing the files
-# from the build image.  Now down to 76 MB.
+# from the build image.  Now down to less than 80 Mbytes.
 # Piaware appears to use command line commands, thus needs a good debian OS.
 
 FROM debian:bookworm-slim  AS  dga-build
