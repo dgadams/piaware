@@ -6,66 +6,33 @@
 
 #   This is rather ugly and was created by iteratively removing and testing
 #   until things broke.  Then put it back.  This is called muntzing.
+shopt -s extglob
 
-#   remove /usr/sbin except for nginx
-    cd /usr/sbin
-	ls | grep -xvE 'nginx' | xargs rm -f
+#   Now we tackle libraries
+	cd /usr/lib
+	rm -rf !(x86_64-linux-gnu|tcl*|libtcl*|Tcl*|piaware|piaware_packages|fa*)
 
-#   remove stuff from /usr/bin.  Have to be careful here.
-    cd /usr/bin
-	rm -rf apt* arch b2sum base* chage chcon chfn chrt chsh cksum
-    rm -rf find* gp* grep gzip h* i* lo* lsblk lscpu lsfd lsipc lsirq
-    rm -rf lslocks lslogins lsmem lsns mawk mkfifo mknod mount
-    rm -rf newgrp nice nl nstat numfmt od partx perl* pr* ptx
-    rm -rf rdma re* sc* se* sha* shred shuf sleep sort split ss stat stdbuf
-    rm -rf stty sync ta* test tic tsort ucl* umount unshare up* vdir
-    rm -rf w* x* y* z* piaware-config piaware-status
+# 	remove all libraries except ...
+	cd /usr/lib/x86_64-linux-gnu
+	EXC="!(libc.*|ld-linux*"                                # basic c library
+	EXC+="|libtinfo*"                                       # needed for bash
+#	EXC+="|libselinux*|libacl.*|libattr.*|libpcre*"         # needed for cp
+	EXC+="|libresolv.*"                                     # needed for busybox
+	EXC+="|libtcl8.6.*|libz.*|libm.*"						# needed for piaware
+	EXC+="|libcrypt*|librtlsdr.*|libusb*|libudev*"
+	EXC+="|libpcre2*|libncurses.*|libpthread.*|libssl.*"
+	EXC+="|libitcl*|libselinux.*|libexpat.*|libtinfo*"
+	EXC+=")"
+	rm -fr $EXC
 
- #   Now we tackle libraries
-    rm -rf /usr/lib/apt
-    rm -rf /usr/lib/systemd
-    rm -rf /usr/lib/piaware-config
-    rm -rf /usr/lib/piaware-status
+#   Nuke some misc stuff
+	rm -rf /var/lib/dpkg
+	rm -rf /var/lib/apt
+	rm -rf /var/cache/debconf
+	rm -rf /var/cache/apt
+	cd /usr/share && rm -rf !(tcltk|piaware)
 
-    rm -rf /lib/x86_64-linux-gnu/perl-base
-    rm -rf /lib/x86_64-linux-gnu/krb5
-    rm -rf /lib/x86_64-linux-gnu/gconv
-
-    rm -rf /lib/x86_64-linux-gnu/libsystemd*
-    rm -rf /lib/x86_64-linux-gnu/libsmartcols*
-    rm -rf /lib/x86_64-linux-gnu/libreadline*
-    rm -rf /lib/x86_64-linux-gnu/libp11-kit*
-    rm -rf /lib/x86_64-linux-gnu/libkrb5*
-    rm -rf /lib/x86_64-linux-gnu/libicu*
-    rm -rf /lib/x86_64-linux-gnu/libgnutls*
-    rm -rf /lib/x86_64-linux-gnu/libdb*
-    rm -rf /lib/x86_64-linux-gnu/libboost*
-    rm -rf /lib/x86_64-linux-gnu/libnettle*
-    rm -rf /lib/x86_64-linux-gnu/libmvec*
-    rm -rf /lib/x86_64-linux-gnu/libndn2*
-    rm -rf /lib/x86_64-linux-gnu/libcuuc*
-    rm -rf /lib/x86_64-linux-gnu/libgmp*
-    rm -rf /lib/x86_64-linux-gnu/libbpf*
-    rm -rf /lib/x86_64-linux-gnu/libapt*
-    rm -rf /lib/x86_64-linux-gnu/libxxhash*
-    rm -rf /lib/x86_64-linux-gnu/libtirpc*
-    rm -rf /lib/x86_64-linux-gnu/libnsl*
-    rm -rf /lib/x86_64-linux-gnu/libhogweed*
-    rm -rf /lib/x86_64-linux-gnu/libgssapi*
-    rm -rf /lib/x86_64-linux-gnu/liblzma5*
-    rm -rf /lib/x86_64-linux-gnu/libffi*
-    rm -rf /lib/x86_64-linux-gnu/libunistring*
-    rm -rf /lib/x86_64-linux-gnu/libmount*
-    rm -rf /lib/x86_64-linux-gnu/libblkid*
-    rm -rf /lib/x86_64-linux-gnu/libgcrypt*
-
-#   Nuke some other big stuff
-    rm -rf /var/lib/dpkg/info/*
-    rm -rf /var/cache/debconf/*
-    rm -rf /usr/share/doc
-    rm -rf /usr/share/zoneinfo
-    rm -rf /usr/share/perl5
-    rm -rf /usr/share/common-licenses
-
-#   Going to stop now.  Removing more files causes the stats page
-#   to not display green boxes
+	# And last remove everything from sbin but nginx 
+	# and everything from bin except busybox piaware and dump1090fa.
+	cd /usr/sbin && rm -rf !(nginx)
+	cd /usr/bin  && rm -rf !(busybox|piaware|dump1090-fa|netstat)

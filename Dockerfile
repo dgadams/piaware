@@ -38,57 +38,51 @@ RUN <<EOR
     dpkg-buildpackage -b --no-sign
 EOR
 
-# the only files we need from the build are the piaware deb and
-# dump1090-fa files and the html directory.  Use WORKDIR to created needed directories.
-# Note wildcard in mv command to pickup piaware changing file name.  DGA 2025-03-09
-WORKDIR /base/dump1090
-RUN mv /piaware_builder/piaware_*_amd64.deb ./piaware.deb && \
-    mv /dump1090/public_html/ .
-WORKDIR /base/usr/bin
-RUN mv /dump1090/debian/dump1090-fa/usr/bin/dump1090-fa .
+# The needed files are in
+# 1. /piaware_builder/piaware_*_amd64.deb Note: * in filename allows versions to change.
+# 2. /dump1090/public_html
+# 3. /dump1090/debian/dump1090-fa/usr/bin/dump1090-fa
 
 #####################################################################
-# This build level creates the file system for the install
-# loading packages and piaware.deb.
-# Note that files are loaded from /base so build files go away.
-# Then removing unneeded files using muntz.sh
+# This build level creates the file system for piaware.
 
 FROM debian:bookworm-slim AS dga-filesystem
 
-COPY --from=dga-build /base /
+#	COPY scripts and all needed files from dga-build.
+COPY files/* /dump1090/
+COPY --from=dga-build /piaware_builder/piaware_*_amd64.deb /dump1090/piaware.deb
+COPY --from=dga-build /dump1090/public_html/ /dump1090/public_html/
+COPY --from=dga-build /dump1090/debian/dump1090-fa/usr/bin/dump1090-fa /usr/bin
+
 RUN <<EOR
+#	Install piaware and load dependancies
     apt-get -yq update
     apt-get -yq install /dump1090/piaware.deb
-    apt-get -yq install nginx libusb-1.0-0 librtlsdr0 libncurses6
-    apt-get clean
-    rm -rf /var/lib/apt/lists/*
-    rm -f /dump1090/piaware.deb
-EOR
+    apt-get -yq install nginx libusb-1.0-0 librtlsdr0 libncurses6 busybox
 
-# Create piaware user and set permissions.
-COPY files/* /dump1090
-RUN <<EOR
-	adduser --no-create-home --disabled-login --disabled-password piaware
+#	Make directories and set permissions
     mkdir /run/dump1090
+    mkdir /run/dump1090-978
     mkdir /var/run/piaware
-    mkdir /var/cache/piaware
     touch /etc/piaware.conf
     touch /dump1090/public_html/upintheair.json
+	touch /run/dump1090-978/receiver.json
     chown -R piaware /run/dump1090
     chown -R piaware /run/piaware
     chown -R piaware /var/cache/piaware
     chown -R piaware /var/log/nginx
     chown -R piaware /var/lib/nginx
-    chown piaware /etc/piaware.conf
-    chown piaware /dump1090/public_html
-    rm -rf /etc/nginx
+    chown -R piaware /dump1090/public_html
+    chown -R piaware /etc/piaware.conf
 
 # Finally muntz the files.
     ./dump1090/muntz.sh
-    rm -f /dump1090/muntz.sh
+    /bin/busybox --install -s
+	rm -rf /dump1090/muntz.sh /dump1090/piaware.deb /etc/nginx
 EOR
 ######################################################################
 # Final installation build level to clean up the image.
+
 FROM scratch AS dga-install
 COPY --from=dga-filesystem / /
 EXPOSE 8080

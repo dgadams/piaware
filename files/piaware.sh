@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # paste environment into piaware.conf
 echo "feeder-id ${FEEDER_ID-}"      >> /etc/piaware.conf
-echo "allow-auto-updates yes"        >> /etc/piaware.conf
+echo "allow-auto-updates yes"       >> /etc/piaware.conf
 echo "allow-mlat yes"               >> /etc/piaware.conf
 echo "mlat-results yes"             >> /etc/piaware.conf
 
