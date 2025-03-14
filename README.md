@@ -11,7 +11,7 @@
 - piaware 10.0
     - built from flightware source.
 ## Tags
-- ***latest***   Stable build - about 80 Mb
+- ***latest***   Stable build - about 60 Mb
 ## building
 - docker buildx build -t dgadams/piaware .
 
@@ -36,6 +36,6 @@ services:
       JSON_LOCATION_ACCURACY: 2
 ```
 ## How I run piaware
-I run the application as a Docker container.  Computer is a Dell Wyse 3040 thin client with 2G of memory and 8G of emmc disk.  I'm using Alpine Linux as the base OS for size, but Debian works just as well.
+I run the application as a Docker container. docker server OS is Alpine for size, but Debian works just as well.
 ## Acknowledgements
 - Thanks to Flightaware for providing the original files
