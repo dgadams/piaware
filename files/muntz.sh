@@ -1,11 +1,8 @@
 #!/bin/bash
+# This script uses a feature of bash - extglob which allows rm !(exception_list) to
+# selectively remove any file in the current image layer except those listed.  
+# Used for muntzing libraries and files down to the minimal set needed to run the application.
 
-#   remove unneeded files - do a little muntzing.
-#   This works in conjuction with the filesystem build layer to allow
-#   us to remove any file from the debian distribution
-
-#   This is rather ugly and was created by iteratively removing and testing
-#   until things broke.  Then put it back.  This is called muntzing.
 shopt -s extglob
 
 #   Now we tackle libraries
@@ -23,7 +20,7 @@ shopt -s extglob
 	EXC+="|libpcre2*|libncurses.*|libpthread.*|libssl.*"
 	EXC+="|libitcl*|libselinux.*|libexpat.*|libtinfo*"
 	EXC+=")"
-	rm -fr $EXC
+	rm -fr $EXC												# remove everything else
 
 #   Nuke some misc stuff
 	rm -rf /var/lib/dpkg
@@ -33,6 +30,6 @@ shopt -s extglob
 	cd /usr/share && rm -rf !(tcltk|piaware)
 
 	# And last remove everything from sbin but nginx 
-	# and everything from bin except busybox piaware and dump1090fa.
+	# and everything from bin except busybox, piaware, netstat, and dump1090fa.
 	cd /usr/sbin && rm -rf !(nginx)
 	cd /usr/bin  && rm -rf !(busybox|piaware|dump1090-fa|netstat)
