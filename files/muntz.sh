@@ -25,11 +25,11 @@ shopt -s extglob
     EXC+=")"
     rm -fr $EXC
 
-#   Nuke some other big stuff
+#   Nuke some other stuff
     rm -rf /var/lib/dpkg/info/*
     rm -rf /var/lib/apt/lists/*
     rm -rf /var/cache/debconf/*
-    rm -rf /etc/exim4 /etc/apt
+    cd /etc && rm -rf !(passwd|group|gshadow|shadow|piaware*)
     cd /usr/share && rm -rf !(ca*|debconf|locale|nginx|piaware|tcltk)
 
 #   remove /usr/sbin except for nginx
