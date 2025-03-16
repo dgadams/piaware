@@ -1,35 +1,43 @@
 #!/bin/bash
 # This script uses a feature of bash - extglob which allows rm !(exception_list) to
-# selectively remove any file in the current image layer except those listed.  
+# selectively remove any file in the current image layer except those listed.
 # Used for muntzing libraries and files down to the minimal set needed to run the application.
 
 shopt -s extglob
 
-#   Now we tackle libraries
-	cd /usr/lib
-	rm -rf !(x86_64-linux-gnu|tcl*|libtcl*|Tcl*|piaware|piaware_packages|fa*)
+#   remove all library directories except ...
+    cd /usr/lib
+    EXCEPT="!(Tcl*|fa_*|libtclx*"
+    EXCEPT+="|os-release|piaware|piaware_packages"
+    EXCEPT+="|ssl|tcl*|terminfo|udev|x86_64*"
+    EXCEPT+=")"
+    rm -rf $EXCEPT
 
-# 	remove all libraries except ...
-	cd /usr/lib/x86_64-linux-gnu
-	EXC="!(libc.*|ld-linux*"                                # basic c library
-	EXC+="|libtinfo*"                                       # needed for bash
-#	EXC+="|libselinux*|libacl.*|libattr.*|libpcre*"         # needed for cp
-	EXC+="|libresolv.*"                                     # needed for busybox
-	EXC+="|libtcl8.6.*|libz.*|libm.*"						# needed for piaware
-	EXC+="|libcrypt*|librtlsdr.*|libusb*|libudev*"
-	EXC+="|libpcre2*|libncurses.*|libpthread.*|libssl.*"
-	EXC+="|libitcl*|libselinux.*|libexpat.*|libtinfo*"
-	EXC+=")"
-	rm -fr $EXC												# remove everything else
+#   remove all libraries except ...
+    cd /usr/lib/x86_64-linux-gnu
+    EXC="!(libc.*|ld-linux*"                        # basic c library
+    EXC+="|libresolv.*"                             # needed for busybox
+    EXC+="|libtcl8.6.*|libz.*|libm.*"               # needed for piaware
+    EXC+="|libcrypt*|librtlsdr.*|libusb*|libudev*"  # or dump1090-fa
+    EXC+="|libpcre2*|libncurses.*|libpthread.*|libssl.*"
+    EXC+="|libitcl*|libselinux.*|libexpat.*|libtinfo*"
+    EXC+="|liblzma.*|libzstd.*|libbz2.*|libmd.*"    # needed for dpkg utility
+    EXC+=")"
+    rm -fr $EXC
 
-#   Nuke some misc stuff
-	rm -rf /var/lib/dpkg
-	rm -rf /var/lib/apt
-	rm -rf /var/cache/debconf
-	rm -rf /var/cache/apt
-	cd /usr/share && rm -rf !(tcltk|piaware)
+#   Nuke some other big stuff
+    rm -rf /var/lib/dpkg/info/*
+    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/cache/debconf/*
+    rm -rf /etc/exim4 /etc/apt
+    cd /usr/share && rm -rf !(ca*|debconf|locale|nginx|piaware|tcltk)
 
-	# And last remove everything from sbin but nginx 
-	# and everything from bin except busybox, piaware, netstat, and dump1090fa.
-	cd /usr/sbin && rm -rf !(nginx)
-	cd /usr/bin  && rm -rf !(busybox|piaware|dump1090-fa|netstat)
+#   remove /usr/sbin except for nginx
+    cd /usr/sbin && rm -rf !(nginx)
+
+#   remove stuff from /usr/bin.
+#   both dpkg and netstat are used by piaware
+    cd /usr/bin
+    rm -rf !(busybox|dpkg*|dump1090-fa|netstat|piaware|pirehose|tcl*)
+
+

@@ -3,7 +3,7 @@ set -e
 
 # paste environment into piaware.conf
 echo "feeder-id ${FEEDER_ID-}"      >> /etc/piaware.conf
-echo "allow-auto-updates yes"       >> /etc/piaware.conf
+echo "allow-auto-updates yes"        >> /etc/piaware.conf
 echo "allow-mlat yes"               >> /etc/piaware.conf
 echo "mlat-results yes"             >> /etc/piaware.conf
 
@@ -32,7 +32,7 @@ if [ -n "$RECEIVER_SERIAL" ]; then OPTS="$OPTS --device-index $RECEIVER_SERIAL";
 if [ -n "$RECEIVER_GAIN"   ]; then OPTS="$OPTS --gain $RECEIVER_GAIN"; fi
 if [ -n "$MAX_RANGE"       ]; then OPTS="$OPTS --max-range $MAX_RANGE"; fi
 if [ "$ERROR_CORRECTION" = "yes" ]; then OPTS="$OPTS --fix"; fi
-if [ -n "$JSON_LOCATION_ACCURACY" ]; then 
+if [ -n "$JSON_LOCATION_ACCURACY" ]; then
     OPTS="$OPTS --json-location-accuracy $JSON_LOCATION_ACCURACY"
 fi
 if [ -n "$RECEIVER_LAT" -a -n "$RECEIVER_LON" ]; then
