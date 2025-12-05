@@ -87,7 +87,6 @@ EOR
 
 FROM scratch AS dga-install
 COPY --from=muntz-layer / /
-EXPOSE 8080
 USER piaware
 WORKDIR /dump1090
 CMD ["/dump1090/piaware.sh"]
