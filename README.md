@@ -8,8 +8,8 @@
     - only built with rtlsdr libraries.
 - nginx web server
     -  exposes ports 8080 http.
-- piaware 10.0
-    - built from flightware source.
+- piaware 11.1
+- built from flightware source.
 ## Tags
 - ***latest***   Stable build - about 60 Mb
 ## building

@@ -5,7 +5,7 @@
 # This project builds and installs piaware, dump1090-fa, and nginx
 # into a single "piaware" image. It uses four build layers to keep things clean.
 
-FROM debian:bookworm-slim  AS  dga-build
+FROM debian:trixie-slim  AS  dga-build
 
 # Build Dump1090
 RUN <<EOR
@@ -23,11 +23,11 @@ RUN <<EOR
         python3-dev python3-venv python3-setuptools libz-dev openssl \
         libboost-system-dev libboost-program-options-dev libboost-regex-dev \
         libboost-filesystem-dev patchelf libncurses6 librtlsdr0 net-tools \
-        wget python3-pip python3-build python3-wheel
+        wget python3-pip python3-build python3-wheel python3-filelock python3-pyasyncore
     git clone "https://github.com/flightaware/piaware_builder.git"
     cd /piaware_builder
-    ./sensible-build.sh bookworm
-    cd ./package-bookworm
+    ./sensible-build.sh trixie
+    cd ./package-trixie
     dpkg-buildpackage -b --no-sign
 EOR
 #####################################################################
@@ -36,7 +36,7 @@ EOR
 # Once installed some file permissions and maintence is done to
 # connect piaware and dump1090-fa
 
-FROM debian:bookworm-slim AS dga-filesystem
+FROM debian:trixie-slim AS dga-filesystem
 
 WORKDIR /dump1090
 COPY --from=dga-build /piaware_builder/piaware_*_amd64.deb /dump1090/piaware.deb
@@ -91,8 +91,8 @@ rm -rf $EXCEPT
 
 #   remove all libraries except ...
 cd /usr/lib/x86_64-linux-gnu
-    EXC="!(libc.*|ld-linux*|libresolv.*"
-    EXC+="|libtcl8.6.*|libz.*|libm.*"                   # needed for piaware
+    EXC="!(libc.*|ld-linux*|libresolv.*|libpython*"
+    EXC+="|libtcl8.6.*|libz.*|libm.*|libcap*"           # needed for piaware
     EXC+="|libcrypt*|librtlsdr.*|libusb*|libudev*"      # or dump1090-fa
     EXC+="|libpcre2*|libncurses.*|libpthread.*|libssl.*"
     EXC+="|libitcl*|libselinux.*|libexpat.*|libtinfo*"
@@ -106,7 +106,7 @@ rm -rf /var/cache/debconf/*
 cd /etc         && rm -rf !(passwd|group|gshadow|shadow|piaware*)
 cd /usr/share   && rm -rf !(ca*|debconf|locale|nginx|piaware|tcltk)
 cd /usr/sbin    && rm -rf !(nginx)
-cd /usr/bin     && rm -rf !(bash|busybox|dpkg*|dump1090-fa|netstat|piaware|pirehose|tcl*)
+cd /usr/bin     && rm -rf !(bash|busybox|dpkg*|dump1090-fa|netstat|piaware|pirehose|tcl*|python*)
 
 /bin/busybox --install -s
 rm -f /bin/bash
