@@ -1,0 +1,32 @@
+name: piaware
+networks:
+  cloud-net:
+    external: true
+
+services:
+  piaware:
+    container_name: piaware
+    image: dgadams/piaware:latest
+#    image: test
+    restart: unless-stopped
+    init: true
+    networks:
+      cloud-net:
+        ipv4_address: 10.12.50.201
+    devices:
+      - /dev/bus/usb
+    environment:
+      FEEDER_ID: "b3fd269c-a85a-4548-9fdf-fd929bcfa7a6"
+      RECEIVER_LON: "-106.51992"
+      RECEIVER_LAT: "35.05850"
+      RECEIVER_SERIAL: "00001090"
+      RECEIVER_GAIN: 60
+      JSON_LOCATION_ACCURACY: 2
+
+    healthcheck:
+      test: echo -n | nc 127.0.0.1 8080
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      
