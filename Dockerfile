@@ -121,5 +121,4 @@ USER piaware
 WORKDIR /dump1090
 CMD ["/dump1090/piaware.sh"]
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD pidof piaware || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD pidof piaware || exit 1
