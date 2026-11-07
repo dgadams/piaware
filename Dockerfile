@@ -60,6 +60,7 @@ RUN <<EOR
     mkdir /var/cache/piaware
     touch /etc/piaware.conf
     touch /dump1090/public_html/upintheair.json
+    echo "{}" > /dump1090/public_html/db/~.json
     chown -R piaware /run/dump1090
     chown -R piaware /run/piaware
     chown -R piaware /var/cache/piaware
