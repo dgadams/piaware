@@ -89,7 +89,7 @@ set -e
 cd /usr/lib
     EXCEPT="!(Tcl*|fa_*|libtclx*"
     EXCEPT+="|os-release|piaware|piaware_packages"
-    EXCEPT+="|ssl|tcl*|x86_64*"
+    EXCEPT+="|ssl|tcl*|x86_64*|udev|terminfo"
     EXCEPT+=")"
 rm -rf $EXCEPT
 
@@ -104,10 +104,19 @@ rm -fr $EXC
 
 # clean up tcltk keeping only needed items.  AI claude helped here
 cd /usr/share/tcltk/tcllib2.0
-    EXC="!(json|pkgIndex.tcl|piaware"
-    EXC+="|Itcl|Tclx|cmdline|tls|tryfinallyshim"
+    EXC="!(json|pkgIndex.tcl|piaware|aes"
+    EXC+="|Itcl|Tclx|cmdline|tls|tryfinallyshim|0compatibility"
     EXC+="|fa_adept_client|fa_gps|fa_piaware_config|fa_services|fa_sudo)"
 rm -rf $EXC
+
+cat > /usr/share/tcltk/tcllib2.0/pkgIndex.tcl <<'EOT'
+set tcllib_dir $dir
+foreach m [glob -nocomplain -directory $tcllib_dir -types d *] {
+    set dir $m
+    if {[file exists [file join $m pkgIndex.tcl]]} { source [file join $m pkgIndex.tcl] }
+}
+set dir $tcllib_dir
+EOT
 
 cd /usr/share/tcltk/tcl8.6
 rm -rf msgs tzdata
