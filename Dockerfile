@@ -61,6 +61,12 @@ RUN <<EOR
     touch /etc/piaware.conf
     touch /dump1090/public_html/upintheair.json
     echo "{}" > /dump1090/public_html/db/~.json
+
+#   compress files in public_html
+    cd /dump1090/public_html
+    find . -type f \( -name '*.json' -o -name '*.js' -o -name '*.css' -o -name '*.svg' \) \
+         ! -name upintheair.json -exec gzip -9 {} +    
+
     chown -R piaware /run/dump1090
     chown -R piaware /run/piaware
     chown -R piaware /var/cache/piaware
@@ -90,7 +96,7 @@ set -e
 cd /usr/lib
     EXCEPT="!(Tcl*|fa_*|libtclx*"
     EXCEPT+="|os-release|piaware|piaware_packages"
-    EXCEPT+="|ssl|tcl*|x86_64*|udev|terminfo"
+    EXCEPT+="|ssl|tcl*|x86_64*"
     EXCEPT+=")"
 rm -rf $EXCEPT
 
@@ -130,9 +136,9 @@ rm -rf /var/lib/dpkg /var/lib/apt                       # CHANGED: also covers d
 rm -rf /root /home /srv /opt /mnt /media
 cd /var/cache   && rm -rf !(piaware)                    # CHANGED: keep /var/cache/piaware
 cd /etc         && rm -rf !(passwd|group|gshadow|shadow|piaware*|hosts|resolv.conf)
-cd /usr/share   && rm -rf !(ca*|locale|nginx|piaware|tcltk)
+cd /usr/share   && rm -rf !(nginx|piaware|tcltk)
 cd /usr/sbin    && rm -rf !(nginx)
-cd /usr/bin     && rm -rf !(bash|busybox|dump1090-fa|netstat|piaware|pirehose|tcl*|python*)
+cd /usr/bin     && rm -rf !(bash|busybox|dump1090-fa|netstat|piaware|tcl*)
 
 /bin/busybox --install -s
 
