@@ -1,45 +1,43 @@
 #!/bin/sh
 set -e
 
-# paste environment into piaware.conf
-echo "feeder-id ${FEEDER_ID-}"      >> /etc/piaware.conf
-echo "allow-auto-updates yes"        >> /etc/piaware.conf
-echo "allow-mlat yes"               >> /etc/piaware.conf
-echo "mlat-results yes"             >> /etc/piaware.conf
+# Environment variables that can be passed in from docker:
+#   FEEDER_ID               piaware feeder id (optional)
+#   RECEIVER_SERIAL         dongle serial or index (--device-index)
+#   RECEIVER_GAIN           receiver gain
+#   MAX_RANGE               maximum range
+#   ERROR_CORRECTION        "yes" enables --fix
+#   JSON_LOCATION_ACCURACY  JSON location accuracy
+#   RECEIVER_LAT/LON        receiver position (both are needed)
 
-# default options for dump1090
-# these options are necessary for proper operation of dump1090.
-OPTS=" --quiet"
-OPTS="$OPTS --device-type rtlsdr"
-OPTS="$OPTS --net-ro-port 30002"
-OPTS="$OPTS --net-sbs-port 30003"
-OPTS="$OPTS --net-bi-port 30004,30104"
-OPTS="$OPTS --net-bo-port 30005"
-OPTS="$OPTS --adaptive-range"
-OPTS="$OPTS --write-json /run/dump1090"
+# Write piaware.conf fresh on every start, so a restart cannot pile up
+# duplicate lines. Updates are off: there is no package manager here.
+{
+    if [ -n "$FEEDER_ID" ]; then echo "feeder-id $FEEDER_ID"; fi
+    echo "allow-auto-updates no"
+    echo "allow-mlat yes"
+    echo "mlat-results yes"
+} > /etc/piaware.conf
 
-# environmental variables that can be passed in from docker.
-# RECEIVER_SERIAL
-# RECEIVER_GAIN
-# MAX_RANGE
-# ERROR_CORRECTION yes
-# JSON_LOCATION_ACCURACY
-# RECEIVER_LAT
-# RECEIVER_LON
+# Options dump1090 needs for proper operation
+set -- --quiet --device-type rtlsdr \
+    --net-ro-port 30002 --net-sbs-port 30003 \
+    --net-bi-port 30004,30104 --net-bo-port 30005 \
+    --adaptive-range --write-json /run/dump1090
 
-# passed in options for dump1090
-if [ -n "$RECEIVER_SERIAL" ]; then OPTS="$OPTS --device-index $RECEIVER_SERIAL"; fi
-if [ -n "$RECEIVER_GAIN"   ]; then OPTS="$OPTS --gain $RECEIVER_GAIN"; fi
-if [ -n "$MAX_RANGE"       ]; then OPTS="$OPTS --max-range $MAX_RANGE"; fi
-if [ "$ERROR_CORRECTION" = "yes" ]; then OPTS="$OPTS --fix"; fi
-if [ -n "$JSON_LOCATION_ACCURACY" ]; then
-    OPTS="$OPTS --json-location-accuracy $JSON_LOCATION_ACCURACY"
-fi
-if [ -n "$RECEIVER_LAT" -a -n "$RECEIVER_LON" ]; then
-    OPTS="$OPTS --lat $RECEIVER_LAT --lon $RECEIVER_LON"
+# Options passed in from docker
+[ -z "$RECEIVER_SERIAL" ] || set -- "$@" --device-index "$RECEIVER_SERIAL"
+[ -z "$RECEIVER_GAIN" ]   || set -- "$@" --gain "$RECEIVER_GAIN"
+[ -z "$MAX_RANGE" ]       || set -- "$@" --max-range "$MAX_RANGE"
+[ "$ERROR_CORRECTION" != "yes" ] || set -- "$@" --fix
+[ -z "$JSON_LOCATION_ACCURACY" ] ||
+    set -- "$@" --json-location-accuracy "$JSON_LOCATION_ACCURACY"
+if [ -n "$RECEIVER_LAT" ] && [ -n "$RECEIVER_LON" ]; then
+    set -- "$@" --lat "$RECEIVER_LAT" --lon "$RECEIVER_LON"
 fi
 
-# start everything up
-dump1090-fa $OPTS &
-nginx -g 'pid /run/dump1090/nginx.pid;' -c '/dump1090/nginx.conf'
-exec piaware -p /run/piaware/piaware.pid -plainlog -statusfile /run/piaware/status.json
+# Start everything up. piaware runs last, in the foreground, as PID 1.
+dump1090-fa "$@" &
+nginx -g 'pid /run/dump1090/nginx.pid;' -c /dump1090/nginx.conf
+exec piaware -p /run/piaware/piaware.pid -plainlog \
+    -statusfile /run/piaware/status.json
