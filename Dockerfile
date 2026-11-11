@@ -3,7 +3,7 @@
 # Date:     2026-Nov-06
 #
 # This project builds and installs piaware, dump1090-fa, and nginx
-# into a single "piaware" image. It uses four build layers to keep things clean.
+# into a single "piaware" image. It uses three stages: build, install, and scratch.
 
 FROM debian:trixie-slim  AS  build1
 
@@ -33,7 +33,7 @@ RUN <<EOR
     dpkg-buildpackage -b --no-sign
 EOR
 #####################################################################
-# The filesystem layer installs piaware and its dependecies into
+# The install stage installs piaware and its dependecies into
 # a clean version of debian.  This is to remove build artifacts.
 # Once installed some file permissions and maintence is done to
 # connect piaware and dump1090-fa
@@ -65,7 +65,7 @@ RUN <<EOR
 #   compress files in public_html
     cd /dump1090/public_html
     find . -type f \( -name '*.json' -o -name '*.js' -o -name '*.css' -o -name '*.svg' \) \
-         ! -name upintheair.json -exec gzip -9 {} +    
+         ! -name upintheair.json -exec gzip -9 {} +
 
     chown -R piaware /run/dump1090
     chown -R piaware /run/piaware
@@ -77,89 +77,134 @@ RUN <<EOR
 EOR
 
 ##############################################
-# This the muntzing layer.  Uneeded files are removed.
-# Muntzing is an iterative process of remove until it breaks and then put it back.
-# This layer seems to be necessary.  Doesn't work if I combine it with build2.
+# Build the final filesystem in /out by copying IN only what is needed.
+# Nothing is deleted, so the muntz stage is no longer needed and
+# scratch gets a minimal, clean filesystem.
+#
+# Steps:  1. copy the files in
+#         2. busybox and the loader
+#         3. check that /out is self-contained
+# cp -a keeps the piaware ownership set above.
 
-FROM scratch AS muntz
+ENV OUT=/out
 
-COPY --from=build2 / /      
-COPY files/* /dump1090/     
+# piaware.sh, nginx.conf, etc.
+COPY files/* /out/dump1090/
 
-RUN <<EOR
-#!/bin/bash
-
-shopt -s extglob        # bash extension to allow rm -rf !(except_file|...)
-set -e
-
-#   remove all library directories except ...
-cd /usr/lib
-    EXCEPT="!(Tcl*|fa_*|libtclx*"
-    EXCEPT+="|os-release|piaware|piaware_packages"
-    EXCEPT+="|ssl|tcl*|x86_64*"
-    EXCEPT+=")"
-rm -rf $EXCEPT
-
-#   remove all libraries except ...
-cd /usr/lib/x86_64-linux-gnu
-    EXC="!(libc.*|ld-linux*|libresolv.*|libpython*"
-    EXC+="|libtcl8.6.*|libz.*|libm.*|libcap*|libpcre2*"
-    EXC+="|libcrypt.*|libcrypto.*|librtlsdr.*|libusb*|libudev*"
-    EXC+="|libzstd.*|libselinux.*"
-    EXC+="|libncurses.*|libpthread.*|libssl.*|libitcl*|libexpat.*|libtinfo*)"
-rm -fr $EXC
-
-# clean up tcltk keeping only needed items.  AI claude helped here
-cd /usr/share/tcltk/tcllib2.0
-    EXC="!(json|pkgIndex.tcl|piaware|aes"
-    EXC+="|Itcl|Tclx|cmdline|tls|tryfinallyshim|0compatibility"
-    EXC+="|fa_adept_client|fa_gps|fa_piaware_config|fa_services|fa_sudo)"
-rm -rf $EXC
-
-cat > /usr/share/tcltk/tcllib2.0/pkgIndex.tcl <<'EOT'
+# Replaces the stock tcllib pkgIndex.tcl, which describes every tcllib module and
+# so expects directories we removed. This one loads the index of each module that is there.
+# Tcl sources a pkgIndex.tcl with $dir set to its own directory, so $dir is pointed at
+# each module while its index loads, then put back.
+COPY <<'EOT' /out/usr/share/tcltk/tcllib2.0/pkgIndex.tcl
 set tcllib_dir $dir
-foreach m [glob -nocomplain -directory $tcllib_dir -types d *] {
-    set dir $m
-    if {[file exists [file join $m pkgIndex.tcl]]} { source [file join $m pkgIndex.tcl] }
+foreach index [glob -nocomplain -directory $tcllib_dir */pkgIndex.tcl] {
+    set dir [file dirname $index]
+    source $index
 }
 set dir $tcllib_dir
 EOT
 
-cd /usr/share/tcltk/tcl8.6
-rm -rf msgs tzdata
-cd /usr/share/tcltk/tcl8.6/encoding
-rm -f !(ascii.enc|iso8859-1.enc|cp1252.enc)
+# ---------------------------------------------------------------
+# Step 1: directory layout, then copy in everything on the lists below.
+# The paths are relative to /, and cp --parents recreates each one under /out.
+# A name that does not exist is skipped, and reported in the build log (look for "skipping missing").
+RUN <<'EOR'
+#!/bin/bash
+    set -euo pipefail
+    shopt -s nullglob extglob       # nullglob: unmatched globs vanish; extglob: !(a|b)
 
-# Selectively removing stuff
-rm -rf /usr/libexec /usr/local /usr/include /usr/src /usr/games
-rm -rf /var/lib/dpkg /var/lib/apt                       # CHANGED: also covers dpkg/info and apt/lists
-rm -rf /root /home /srv /opt /mnt /media
-cd /var/cache   && rm -rf !(piaware)                    # CHANGED: keep /var/cache/piaware
-cd /etc         && rm -rf !(passwd|group|gshadow|shadow|piaware*|hosts|resolv.conf)
-cd /usr/share   && rm -rf !(nginx|piaware|tcltk)
-cd /usr/sbin    && rm -rf !(nginx)
-cd /usr/bin     && rm -rf !(bash|busybox|dump1090-fa|netstat|piaware|tcl*)
+#   --- layout: same merged-/usr symlinks as Debian ---
+    mkdir -p $OUT/lib64 $OUT/var $OUT/tmp
+    chmod 1777 $OUT/tmp
+    ln -s usr/lib  $OUT/lib
+    ln -s usr/bin  $OUT/bin
+    ln -s usr/sbin $OUT/sbin
+    ln -s ../run   $OUT/var/run
 
-/bin/busybox --install -s
+    cd /
 
-# check libraries
-# CHANGED: also checks every shared object under /usr/lib (Tcl and Python extensions)
-for f in /usr/lib/piaware/helpers/* /usr/bin/dump1090-fa /usr/sbin/nginx /usr/bin/netstat \
-         $(find /usr/lib -type f -name '*.so*'); do
-    if /lib64/ld-linux-x86-64.so.2 --list "$f" 2>/dev/null | grep -q "not found"; then
-        echo "MISSING LIBS for $f:"; /lib64/ld-linux-x86-64.so.2 --list "$f" | grep "not found"; exit 1
-    fi
-done
+    BINS=(
+        usr/bin/{busybox,dump1090-fa,netstat,piaware}  usr/bin/tcl*
+        usr/sbin/nginx
+    )
 
-# finally remove bash and done.
-rm -f /bin/bash
+#   Every library the image needs is named here. Step 3 fails the build if one is missing.
+#   ld-linux is left out: step 2 puts it in /lib64.
+    M=usr/lib/x86_64-linux-gnu
+    LIBS=(
+        usr/lib/{Tcl*,fa_*,libtclx*,os-release,piaware,piaware_packages,ssl,tcl*}
+        $M/{libc.*,libm.*,libresolv.*,libpthread.*,libcrypt.*}    # C library
+        $M/{libz.*,libzstd.*,libpcre2*,libexpat.*}                # compression, regex, xml
+        $M/{libssl.*,libcrypto.*}                                 # TLS
+        $M/{libcap*,libselinux.*,libncurses.*,libtinfo*}          # nginx, netstat
+        $M/{libusb*,libudev*,librtlsdr.*}                         # dongle access
+        $M/{libpython*,libtcl8.6.*,libitcl*}                      # mlat and tcl
+    )
+
+#   tcltk: everything except tcllib2.0 and tcl8.6, which are trimmed.
+#   tcllib2.0/pkgIndex.tcl comes from the COPY above.
+    TCL=(
+        usr/share/tcltk/!(tcllib2.0|tcl8.6)
+        usr/share/tcltk/tcllib2.0/{json,aes,cmdline,0compatibility}
+        usr/share/tcltk/tcl8.6/!(msgs|tzdata|encoding)
+        usr/share/tcltk/tcl8.6/encoding/{ascii,iso8859-1,cp1252}.enc
+    )
+
+#   data, and the directories piaware and nginx write to
+    DATA=(
+        usr/share/{nginx,piaware}
+        etc/{passwd,group}  etc/piaware*
+        var/cache/piaware  var/log/nginx  var/lib/nginx
+        run/dump1090  run/piaware
+        dump1090/public_html
+    )
+
+#   keep only the names that exist, and say which ones were skipped
+    KEEP=()
+    for p in "${BINS[@]}" "${LIBS[@]}" "${TCL[@]}" "${DATA[@]}"; do
+        if [ -e "$p" ]; then KEEP+=("$p"); else echo "skipping missing: $p"; fi
+    done
+
+    cp -a --parents -t $OUT "${KEEP[@]}"
 EOR
+
+# ---------------------------------------------------------------
+# Step 2: busybox applets, and the dynamic loader.
+# The loader is the one library the lists above leave out. Everything else
+# comes from the lists, so nothing extra is copied in by ldd.
+RUN <<'EOR'
+#!/bin/bash
+    set -euo pipefail
+
+    /usr/bin/busybox --install -s $OUT/usr/bin      # every applet goes in /usr/bin
+    cp -L --parents /lib64/ld-linux-x86-64.so.2 $OUT
+EOR
+
+# ---------------------------------------------------------------
+# Step 3: check /out is self-contained. Libraries are resolved against /out only,
+# as in the final image. The build stops on any missing file or library.
+RUN <<'EOR'
+#!/bin/bash
+    set -euo pipefail
+
+    CHECK=(
+        /usr/lib/piaware/helpers/*  /usr/bin/dump1090-fa  /usr/sbin/nginx  /usr/bin/netstat  /usr/bin/busybox
+        $(find $OUT/usr/lib -type f -name '*.so*' | sed "s#^$OUT##")
+    )
+    for f in "${CHECK[@]}"; do
+        [ -e "$OUT$f" ] || { echo "MISSING FILE $f"; exit 1; }
+        if chroot $OUT /lib64/ld-linux-x86-64.so.2 --list "$f" 2>/dev/null | grep 'not found'; then
+            echo "^ MISSING LIBS for $f"; exit 1
+        fi
+    done
+EOR
+
 ######################################################################
 # installation layer
-# Making this layer removes all the deleted file space left after muntzing.
+# Only the needed files are copied in, so no deleted-file space is left behind.
 
 FROM scratch AS dga-install
-COPY --from=muntz / /
+COPY --from=build2 /out/ /
 USER piaware
 WORKDIR /dump1090
 CMD ["/dump1090/piaware.sh"]
