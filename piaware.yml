@@ -14,11 +14,3 @@ services:
       RECEIVER_SERIAL: "00001090"   #optional
       RECEIVER_GAIN: 60
       JSON_LOCATION_ACCURACY: 2
-
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-      

@@ -234,6 +234,12 @@ EOR
 FROM scratch AS dga-install
 
 COPY --from=install /out/ /
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD grep -q '"Connected to FlightAware and logged in"' /run/piaware/status.json \
+   && grep -q '"Received Mode S data recently"' /run/piaware/status.json \
+   || exit 1
+
 USER piaware
 WORKDIR /dump1090
 CMD ["/dump1090/piaware.sh"]
