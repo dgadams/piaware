@@ -54,20 +54,18 @@ COPY --from=build /dump1090/public_html/ public_html/
 COPY --from=build /dump1090/debian/dump1090-fa/usr/bin/dump1090-fa \
      /usr/bin/
 
-
 RUN <<EOR
+    set -e
     apt-get -yq update
     apt-get -yq install /dump1090/piaware.deb
     apt-get -yq install nginx libusb-1.0-0 librtlsdr0 libncurses6 busybox
-    apt-get clean
-    rm -rf /dump1090/piaware.deb /etc/nginx
 
     # Basic piaware and dump1090-fa setup
     # (the piaware package usually creates this user already)
     id piaware >/dev/null 2>&1 || \
         adduser --no-create-home --disabled-login --disabled-password piaware
-    mkdir /run/dump1090 /var/run/piaware /var/cache/piaware
-    touch /etc/piaware.conf public_html/upintheair.json
+    mkdir -p /run/dump1090 /run/piaware /var/cache/piaware
+    touch public_html/upintheair.json
     echo "{}" > public_html/db/~.json
 
     # Compress the web files (upintheair.json must stay readable as is)
@@ -80,7 +78,7 @@ RUN <<EOR
     chown -R piaware \
         /run/dump1090 /run/piaware /var/cache/piaware \
         /var/log/nginx /var/lib/nginx
-    chown piaware /etc/piaware.conf public_html
+    chown piaware public_html
 EOR
 
 #----------------------------------------------------------------------
@@ -121,12 +119,17 @@ RUN <<'EOR'
     shopt -s nullglob       # a glob that matches nothing is dropped
 
     # --- /out layout: Debian-style symlinks ---
-    mkdir -p $OUT/lib64 $OUT/var $OUT/tmp
+    mkdir -p $OUT/etc $OUT/lib64 $OUT/var $OUT/tmp
     chmod 1777 $OUT/tmp
     ln -s usr/lib  $OUT/lib
     ln -s usr/bin  $OUT/bin
     ln -s usr/sbin $OUT/sbin
     ln -s ../run   $OUT/var/run
+
+    # piaware.conf is written at startup by piaware.sh. The link sends it
+    # to the tmpfs on /run/piaware, so /etc is never written at runtime.
+    # It dangles until then, which is fine.
+    ln -s /run/piaware/piaware.conf $OUT/etc/piaware.conf
 
     cd /
     LIB=usr/lib/x86_64-linux-gnu
@@ -169,8 +172,9 @@ RUN <<'EOR'
     )
 
     # Data, and the directories piaware and nginx write to
+    # (etc/piaware.conf is the symlink made above, not copied from here)
     DATA=(
-        usr/share/nginx usr/share/piaware etc/passwd etc/group etc/piaware*
+        usr/share/nginx usr/share/piaware etc/passwd etc/group
         var/cache/piaware var/log/nginx var/lib/nginx run/dump1090 run/piaware
         dump1090/public_html
     )
@@ -202,7 +206,7 @@ EOR
 # ---------------------------------------------------------------------
 # Step 3: check that /out is self-contained. Libraries are resolved
 # against /out only, as in the final image. Stops on any missing file
-# or library.
+# or library, or if the piaware.conf link is wrong.
 RUN <<'EOR'
 #!/bin/bash
     set -euo pipefail
@@ -225,6 +229,9 @@ RUN <<'EOR'
     for f in $(find $OUT/usr/lib -type f -name '*.so*'); do
         check "${f#$OUT}"
     done
+
+    [ "$(readlink $OUT/etc/piaware.conf)" = /run/piaware/piaware.conf ] ||
+        { echo "BAD LINK /etc/piaware.conf"; exit 1; }
 EOR
 
 #######################################################################
@@ -235,10 +242,13 @@ FROM scratch AS dga-install
 
 COPY --from=install /out/ /
 
+# "|| exit 1" matters: grep exits 2 if status.json is missing, and
+# Docker reserves exit code 2.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD grep -q '"Connected to FlightAware and logged in"' /run/piaware/status.json \
-   && grep -q '"Received Mode S data recently"' /run/piaware/status.json \
-   || exit 1
+  CMD f=/run/piaware/status.json; \
+      grep -q '"Connected to FlightAware and logged in"' "$f" \
+      && grep -q '"Received Mode S data recently"' "$f" \
+      || exit 1
 
 USER piaware
 WORKDIR /dump1090

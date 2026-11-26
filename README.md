@@ -11,31 +11,53 @@
 - piaware 11.1
 - built from flightware source.
 ## Tags
-- ***latest***   Stable build - about 60 Mb
-## building
-- docker buildx build -t dgadams/piaware .
+- ***latest***   Stable build - about 55MB disk size
 
 ### Usually run using docker compose yml file:
 ```
 name: piaware
+
 services:
   piaware:
-    container_name: piaware
-    image: piaware:latest
-    restart: unless-stopped
-    init: true
-    ports:
-      - 8080:8080
-    devices:
-      - /dev/bus/usb
-    environment:
-      FEEDER_ID: "your feeder id here"
-      RECEIVER_LON: "your longitude"
-      RECEIVER_LAT: "your latitude"
-      RECEIVER: "rtlsdr"
-      JSON_LOCATION_ACCURACY: 2
+      container_name: piaware
+      image: dgadams/piaware:latest
+      pull_policy: always
+      restart: unless-stopped
+      init: true
+      read_only: true
+      security_opt:
+        - no-new-privileges:true
+
+      # RTL-SDR dongle be sure there is a udev rule to set mode of 
+      # the device to 666
+      devices:
+        - /dev/bus/usb:/dev/bus/usb
+
+      # Everything the container writes lives here (root is read-only).
+      # /etc/piaware.conf is a link into /run/piaware.
+      tmpfs:
+        - /run:rw,noexec,nosuid,mode=1777,size=64m
+        - /run/dump1090:rw,noexec,nosuid,mode=1777,size=32m
+        - /run/piaware:rw,noexec,nosuid,mode=1777,size=16m
+        - /tmp:rw,noexec,nosuid,mode=1777,size=32m
+        - /var/log:rw,noexec,nosuid,mode=1777,size=64m
+        - /var/cache/piaware:rw,noexec,nosuid,mode=1777,size=32m
+        - /var/lib/nginx:rw,noexec,nosuid,mode=1777,size=16m
+
+      logging:
+        driver: json-file
+        options: { max-size: "10m", max-file: "3" }
+
+      environment:
+#        FEEDER_ID: "your feeder id"
+#        RECEIVER_LAT: "37.05"
+#        RECEIVER_LON: "-100.2"
+#        RECEIVER_SERIAL: "your_serial"
+        RECEIVER_GAIN: "-10"            # dump1090-fa / piaware default
+        JSON_LOCATION_ACCURACY: "2"     # 0 none, 1 approximate, 2 exact
+          
 ```
 ## How I run piaware
-I run the application as a Docker container. docker server OS is Alpine for size, but Debian works just as well.
+I run the application as a Docker container.
 ## Acknowledgements
 - Thanks to Flightaware for providing the original files
